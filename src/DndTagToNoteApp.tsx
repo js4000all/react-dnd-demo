@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   DndContext,
-  closestCenter,
   useDraggable,
   useDroppable,
   DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
 } from '@dnd-kit/core';
 
 // 型定義
@@ -26,12 +23,16 @@ interface DroppableNoteProps {
 
 // Tag コンポーネント
 function DraggableTag({ tag }: DraggableTagProps) {
-  const { attributes, listeners, setNodeRef } = useDraggable({ id: tag });
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id: tag });
+  const style = {
+    transform: transform ? `translate(${transform?.x}px, ${transform?.y}px)` : undefined,
+  };
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      style={style}
       className="px-2 py-1 bg-blue-100 rounded border cursor-move flex justify-between items-center"
     >
       <span>{tag}</span>
@@ -65,15 +66,9 @@ export default function DndTagToNoteApp() {
     { text: 'Buy groceries', tag: '' },
     { text: 'Plan weekend trip', tag: '' },
   ]);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveTag(String(event.active.id));
-  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    setActiveTag(null);
     if (!over || !active) return;
 
     const tag = String(active.id);
@@ -86,12 +81,8 @@ export default function DndTagToNoteApp() {
   };
 
   return (
-    <div className="flex gap-10 p-8 bg-gray-50 min-h-screen">
-      <DndContext
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        collisionDetection={closestCenter}
-      >
+    <div className="flex gap-10 p-8 bg-gray-50">
+      <DndContext onDragEnd={handleDragEnd}>
         <div className="w-1/3">
           <h2 className="text-lg font-bold mb-4">Tags</h2>
           <div className="flex flex-col gap-2">
@@ -113,14 +104,6 @@ export default function DndTagToNoteApp() {
             ))}
           </div>
         </div>
-
-        <DragOverlay>
-          {activeTag ? (
-            <div className="px-2 py-1 bg-blue-200 border border-blue-400 rounded shadow-lg opacity-90 text-center">
-              {activeTag}
-            </div>
-          ) : null}
-        </DragOverlay>
       </DndContext>
     </div>
   );
