@@ -5,6 +5,8 @@ import {
   useDraggable,
   useDroppable,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
 
 // 型定義
@@ -43,8 +45,8 @@ function DroppableNote({ note, index }: DroppableNoteProps) {
   return (
     <div
       ref={setNodeRef}
-      className={`p-3 border rounded bg-white flex flex-col gap-1 ${
-        isOver ? 'border-blue-500' : 'border-gray-300'
+      className={`p-3 border rounded bg-white flex flex-col gap-1 transition ${
+        isOver ? 'border-blue-500 shadow-md' : 'border-gray-300'
       }`}
     >
       <div className="font-semibold">{note.text}</div>
@@ -63,9 +65,15 @@ export default function DndTagToNoteApp() {
     { text: 'Buy groceries', tag: '' },
     { text: 'Plan weekend trip', tag: '' },
   ]);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveTag(String(event.active.id));
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveTag(null);
     if (!over || !active) return;
 
     const tag = String(active.id);
@@ -79,7 +87,11 @@ export default function DndTagToNoteApp() {
 
   return (
     <div className="flex gap-10 p-8 bg-gray-50 min-h-screen">
-      <DndContext onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
+      <DndContext
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        collisionDetection={closestCenter}
+      >
         <div className="w-1/3">
           <h2 className="text-lg font-bold mb-4">Tags</h2>
           <div className="flex flex-col gap-2">
@@ -101,6 +113,14 @@ export default function DndTagToNoteApp() {
             ))}
           </div>
         </div>
+
+        <DragOverlay>
+          {activeTag ? (
+            <div className="px-2 py-1 bg-blue-200 border border-blue-400 rounded shadow-lg opacity-90 text-center">
+              {activeTag}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   );
